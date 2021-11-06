@@ -1,0 +1,1 @@
+worker: poll_bot manage.py bot
