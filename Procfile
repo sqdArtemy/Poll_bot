@@ -1,1 +1,1 @@
-worker: poll_bot manage.py bot
+worker: python poll_bot manage.py bot
