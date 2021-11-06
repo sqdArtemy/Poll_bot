@@ -241,10 +241,12 @@ def send_prize(instance, **kwargs):
         lang = Language.objects.filter(name = user.language).get()
         field_obj = Language._meta.get_field('correct')
         phrase = getattr(lang, field_obj.attname)
-
-        bot.send_message(
-            chat_id = instance.user_id,
-            text = phrase
-        )
+        
+        try:
+            bot.send_message(
+                chat_id = instance.user_id,
+                text = phrase
+            )
+        except: pass
         
         
