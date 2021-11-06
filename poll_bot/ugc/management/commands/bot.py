@@ -6,7 +6,7 @@ from poll_bot.settings import TOKEN
 from django.db.models.query_utils import FilteredRelation
 from telegram import *
 from telegram.ext import *
-
+import os
 from ugc.models import Language, Profile, Question, Answers, AnsweredUsers
 
 # getting current user`s id
@@ -236,10 +236,14 @@ class Command(BaseCommand):
     help = 'Poll_bot'
     
     def handle(self, *args, **options):
+
+        PORT = int(os.environ.get('PORT', '5000'))
+
         global bot
-        bot = Bot(
-            token = TOKEN,
-        )
+        bot = Bot(token = TOKEN)
+        url = "https://mighty-anchorage-23125.herokuapp.com/"
+
+        bot.setWebhook(url + TOKEN)
 
         updater = Updater(
             bot = bot,
@@ -251,5 +255,10 @@ class Command(BaseCommand):
         updater.dispatcher.add_handler(CallbackQueryHandler(callback=callback_handler, run_async = True))
         updater.dispatcher.add_handler(MessageHandler(Filters.contact, callback=contact_callback))
 
-        updater.start_polling()
+        # updater.start_polling()
+        # updater.idle()
+        updater.start_webhook(listen="0.0.0.0",
+                       port=PORT,
+                       url_path= TOKEN)
+        updater.bot.setWebhook(url + TOKEN)
         updater.idle()
