@@ -241,7 +241,7 @@ class Command(BaseCommand):
 
         global bot
         bot = Bot(token = TOKEN)
-        url = "https://mighty-anchorage-23125.herokuapp.com/"
+        url = "https://obscure-mesa-34486.herokuapp.com/"
 
         bot.setWebhook(url + TOKEN)
 
