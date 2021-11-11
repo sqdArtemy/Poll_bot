@@ -1,9 +1,5 @@
 from django.core.management.base import BaseCommand
-from django.db.models import fields
-from telegram import chat, replykeyboardmarkup, replymarkup
-from telegram import ext
 from poll_bot.settings import TOKEN
-from django.db.models.query_utils import FilteredRelation
 from telegram import *
 from telegram.ext import *
 import os
@@ -96,6 +92,7 @@ def menu(update: Update):
     question = get_phrase(update, language(update), 'ans_ques')
     
     if get_item(update,chat_id, 'state', Profile) == 'menu':
+        bot = Bot(token = TOKEN)
         bot.send_message(
             chat_id = chat_id,
             text = get_phrase(update, language(update), 'post'),
@@ -105,6 +102,7 @@ def menu(update: Update):
                 )
             )
     elif get_item(update,chat_id, 'state', Profile) == 'phone':
+        bot = Bot(token = TOKEN)
         bot.send_message(
             chat_id = chat_id,
             text = get_phrase(update, language(update), 'ent_phone'),
@@ -116,6 +114,7 @@ def menu(update: Update):
 
 #asking user`s name
 def ask_name(update: Update, chat_id):
+    bot = Bot(token = TOKEN)
     bot.send_message(
         chat_id,            
         text = get_phrase(update, language(update), 'ent_name'),
@@ -241,7 +240,7 @@ class Command(BaseCommand):
 
         global bot
         bot = Bot(token = TOKEN)
-        url = "https://obscure-mesa-34486.herokuapp.com/"
+        url = "https://6ac3-213-230-127-84.ngrok.io/"
 
         bot.setWebhook(url + TOKEN)
 
@@ -249,7 +248,6 @@ class Command(BaseCommand):
             bot = bot,
             use_context = True,
         )
-
         updater.dispatcher.add_handler(CommandHandler("start", start))
         updater.dispatcher.add_handler(MessageHandler(Filters.text, callback=message_handler, run_async=True))
         updater.dispatcher.add_handler(CallbackQueryHandler(callback=callback_handler, run_async = True))
@@ -258,7 +256,7 @@ class Command(BaseCommand):
         # updater.start_polling()
         # updater.idle()
         updater.start_webhook(listen="0.0.0.0",
-                       port=PORT,
-                       url_path= TOKEN)
-        updater.bot.setWebhook(url + TOKEN)
+            port=PORT,
+            url_path=TOKEN,
+            webhook_url=(url + TOKEN))
         updater.idle()
