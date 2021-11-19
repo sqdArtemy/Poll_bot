@@ -10,6 +10,7 @@ from poll_bot.settings import TOKEN
 from telegram import Bot
 # Create your models here.
 
+
 class Profile(models.Model):
     external_id = models.PositiveIntegerField(
         verbose_name='Telegram ID',
@@ -29,7 +30,7 @@ class Profile(models.Model):
     )
     chosen_ans = models.TextField(
         verbose_name='Chosen answer to the question',
-        default = 0
+        default=0
     )
     name = models.TextField(
         verbose_name='Name of the user'
@@ -41,10 +42,13 @@ class Profile(models.Model):
         verbose_name='Where is user',
         default='start'
     )
+
     def __str__(self):
         return f'User #{self.external_id}'
+
     class Meta:
         verbose_name = 'Users profile'
+
 
 class Language(models.Model):
     name = models.TextField(
@@ -94,8 +98,9 @@ class Language(models.Model):
         verbose_name='Enter your phone'
     )
     send_num = models.TextField(
-        verbose_name= 'Send number'
+        verbose_name='Send number'
     )
+
     class Meta:
         verbose_name = 'Language'
 
@@ -112,14 +117,14 @@ class Question(models.Model):
         verbose_name='Number of the qustion'
     )
     winners_number = models.PositiveIntegerField(
-        verbose_name= 'Number of winners'
+        verbose_name='Number of winners'
     )
     prize = models.FloatField(
-        verbose_name= 'Prize'
+        verbose_name='Prize'
     )
     time = models.DateTimeField(
         verbose_name='Available at this time:',
-        default= django.utils.timezone.now
+        default=django.utils.timezone.now
     )
     status = models.TextField(
         verbose_name='Question status',
@@ -129,8 +134,10 @@ class Question(models.Model):
         verbose_name='Users answered',
         default=0
     )
+
     def __str__(self):
         return f'{self.number}'
+
     class Meta:
         verbose_name = 'Question'
 
@@ -146,10 +153,13 @@ class Answers(models.Model):
         'Question',
         on_delete=models.PROTECT
     )
+
     def __str__(self):
         return f'{self.name}'
+
     class Meta:
-        verbose_name='Answers to the question'
+        verbose_name = 'Answers to the question'
+
 
 class AnsweredUsers(models.Model):
     question = models.ForeignKey(
@@ -163,8 +173,10 @@ class AnsweredUsers(models.Model):
         'Answers',
         on_delete=models.PROTECT
     )
+
     class Meta:
-        verbose_name='Answers to questions by user'
+        verbose_name = 'Answers to questions by user'
+
 
 class RightAnswers(models.Model):
     question = models.ForeignKey(
@@ -191,62 +203,64 @@ class RightAnswers(models.Model):
         verbose_name='Send Prize',
         default=False
     )
+
     class Meta:
         verbose_name = 'Right answers by user'
 
-# SINGAL post_save
-# post(self, instance, is_created)
-# is_created TRUE
-# check  = AnsweredUsers.objets.fitler(answer = instance.answer).count()
 
-@receiver(post_save, sender = AnsweredUsers)
+@receiver(post_save, sender=AnsweredUsers)
 def counter(instance, **kwargs):
 
-    user = Profile.objects.filter(external_id = instance.user_id).get()
+    user = Profile.objects.filter(external_id=instance.user_id).get()
 
-    AnsweredUsers.objects.filter(question = instance.question, answer = instance.question.right_choice).count()
+    AnsweredUsers.objects.filter(
+        question=instance.question, answer=instance.question.right_choice).count()
 
     if instance.question.right_choice == instance.answer:
         RightAnswers.objects.create(
-            question = instance.question,
-            user_id = instance.user_id,
-            name = user.name,
-            phone = user.phone,
-            answer = instance.question.right_choice,
-            number = AnsweredUsers.objects.filter(question = instance.question, answer = instance.question.right_choice).count()
+            question=instance.question,
+            user_id=instance.user_id,
+            name=user.name,
+            phone=user.phone,
+            answer=instance.question.right_choice,
+            number=AnsweredUsers.objects.filter(
+                question=instance.question, answer=instance.question.right_choice).count()
         )
+
 
 @receiver(post_save, sender=Profile)
 def name_change(instance, **kwargs):
     def upd(data):
-        Profile.objects.filter(external_id = instance.external_id).update(state = data)
+        Profile.objects.filter(
+            external_id=instance.external_id).update(state=data)
 
     if instance.state == 'name':
         upd('phone')
     elif instance.state == 'phone':
         upd('menu')
 
-@receiver(post_save, sender = RightAnswers)
+
+@receiver(post_save, sender=RightAnswers)
 def send_prize(instance, **kwargs):
-    user = Profile.objects.filter(external_id = instance.user_id).get()
+    user = Profile.objects.filter(external_id=instance.user_id).get()
     wallet = user.wallet
 
     if instance.send_money == True:
-        Profile.objects.filter(external_id = instance.user_id ).update(wallet = wallet + instance.question.prize)
+        Profile.objects.filter(external_id=instance.user_id).update(
+            wallet=wallet + instance.question.prize)
 
         bot = Bot(
-            token = TOKEN,
+            token=TOKEN,
         )
 
-        lang = Language.objects.filter(name = user.language).get()
+        lang = Language.objects.filter(name=user.language).get()
         field_obj = Language._meta.get_field('correct')
         phrase = getattr(lang, field_obj.attname)
-        
+
         try:
             bot.send_message(
-                chat_id = instance.user_id,
-                text = phrase
+                chat_id=instance.user_id,
+                text=phrase
             )
-        except: pass
-        
-        
+        except:
+            pass
